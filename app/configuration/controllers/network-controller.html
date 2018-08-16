@@ -1,4 +1,3 @@
-<loader loading="loading"></loader>
 <div id="configuration-network">
 	<div class="row column">
 		<h1>BMC network settings</h1>
@@ -11,7 +10,7 @@
 			<fieldset>
 				<div class="column small-12 large-3">
 					<label for="net-config__mac">Hostname</label>
-					<input id="net-config__mac" type="text" ng-model="hostname"/>
+					<input id="net-config__mac" type="text" readonly value="{{hostname}}"/>
 				</div>
 				<div class="column small-12 large-3">
 					<label for="netinterface-select">Network interface</label>
@@ -29,8 +28,8 @@
 					<input id="net-config__host" type="text" ng-model="interface.MACAddress"/>
 				</div>
 				<div class="column small-12 large-3">
-					<label for="net-config__domain">Default Gateway</label>
-					<input id="net-config__domain" type="text" ng-model="defaultgateway"/>
+					<label for="net-config__domain">Domain name</label>
+					<input id="net-config__domain" type="text" ng-model="interface.DomainName"/>
 				</div>
 			</fieldset>
 		</section>
@@ -41,14 +40,13 @@
 			<fieldset>
 				<div class="row column">
 					<label class="control-radio" for="dhcp-address">Obtain an IP address automatically using DHCP
-						<!-- TODO: openbmc/openbmc#3154 Rest server should return a proper JSON bool instead of "0" or "1"-->
-						<input type="radio" name="ip-address" id="dhcp-address" ng-checked="true" ng-model="interface.DHCPEnabled" ng-value="1">
+						<input type="radio" name="ip-address" id="dhcp-address" ng-checked="true" ng-model="interface.DHCPEnabled" ng-value="true">
 						<span class="control__indicator control__indicator-on"></span>
 					</label>
 				</div>
 				<div class="row column">
 					<label class="control-radio" for="static-ip-address">Assign a static IP address
-						<input type="radio" name="ip-address" id="static-ip-address" ng-model="interface.DHCPEnabled" ng-value="0"/>
+						<input type="radio" name="ip-address" id="static-ip-address" ng-model="interface.DHCPEnabled" ng-value="false"/>
 						<span class="control__indicator control__indicator-on"></span>
 					</label>
 				</div>
@@ -61,10 +59,9 @@
 						<label for="net-config__subnet" class="inline">Gateway</label>
 						<input id="net-config__subnet" type="text" ng-disabled="interface.DHCPEnabled" value="" ng-model="ipv4.Gateway"/>
 					</div>
-					<!-- This netmask prefix length max only works with IPV4 -->
 					<div class="column small-12 large-4">
-						<label for="net-config__default-gateway" class="inline">Netmask Prefix Length</label>
-						<input id="net-config__default-gateway" type="number" min="1" max="32" step="1" ng-disabled="interface.DHCPEnabled"  ng-model="ipv4.PrefixLength"/>
+						<label for="net-config__default-gateway" class="inline">Origin</label>
+						<input id="net-config__default-gateway" type="text" ng-disabled="interface.DHCPEnabled"  ng-model="ipv4.Origin"/>
 					</div>
 				</fieldset>
 			</fieldset>
@@ -75,37 +72,18 @@
 			</div>
 			<fieldset>
 				<div class="column small-12 large-4">
-						<!-- Call Nameservers "DNS Servers" on the GUI -->
-						<fieldset class="net-config__static-ip-wrap" ng-repeat="dns in interface.Nameservers track by $index">
-							<label for="net-config__prime-dns{{$index+1}}">DNS Server {{$index+1}}</label>
-							<input id="net-config__prime-dns{{$index+1}}" type="text" ng-model="dns" ng-blur="interface.Nameservers[$index] = dns" set-focus-dns-field/>
-						</fieldset>
-						<button type="button" class="btn-primary inline" ng-click="addDNSField()">Add new DNS server</button>
+					<ul>
+						<li ng-repeat="dns in interface.Nameservers track by $index">
+							<label for="net-config__prime-dns">DNS Server {{$index+1}}</label>{{dns}}
+							<br/>
+						</li>
+					</ul>
 				</div>
 			</fieldset>
 			<div class="network-config__submit-wrapper">
-				<button type="button" class="btn-primary inline" ng-click="confirm_settings=true;">Save settings</button>
-				<button type="button" class="btn-secondary inline" ng-click="refresh()">Cancel</button>
+				<button class="btn-primary inline">Save settings</button>
+				<button class="btn-secondary inline">Cancel</button>
 			</div>
-			<p class="success-msg set_network_success" ng-show="set_network_success" role="alert">Success! Network settings changed!</p>
-			<p class="set_network_error error-msg" ng-show="set_network_error" role="alert">Error setting {{set_network_error}}!</p>
 		</section>
 	</form>
 </div>
-<section class="modal" aria-hidden="true" aria-labelledby="modalTitle" aria-describedby="modalDescription" role="dialog" ng-class="{'active': confirm_settings}">
-	<div class="modal__tftp-unreachable" role="document">
-		<div class="screen-reader-offscreen modal-description">Change network settings</div><!-- accessibility only; used for screen readers -->
-		<div class="page-header ">
-			<span class="icon icon__warning inline"><span class="accessible-text" role="alert">Warning</span></span>
-			<h1 class="modal-title h4 inline">Change network settings</h1>
-		</div>
-		<div class="modal__content">
-			<p>Changing network settings may cause the system to become unavailable (e.g. changing the BMC IP address).
-				Proceed with caution and make note of any new settings that may affect connectivity.</p>
-		</div>
-		<div class="modal__button-wrapper">
-			<button class="inline btn-secondary" ng-click="confirm_settings=false;">Cancel</button>
-			<button class="inline btn-primary" ng-click="setNetworkSettings()">Continue</button>
-		</div>
-	</div>
-</section>

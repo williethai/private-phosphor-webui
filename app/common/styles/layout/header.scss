@@ -16,7 +16,7 @@ $logoMaxWidth: 125px;
   z-index: 300;
 }
 
-.header__title {
+.app__version {
   margin-left: 1em;
   display: none;
   @include mediaQuery(x-small) {

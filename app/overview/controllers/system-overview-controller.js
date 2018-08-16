@@ -4,157 +4,117 @@
  * @module app/overview
  * @exports systemOverviewController
  * @name systemOverviewController
+ * @version 0.1.0
  */
 
-window.angular && (function(angular) {
-  'use strict';
+window.angular && (function (angular) {
+    'use strict';
 
-  angular.module('app.overview').controller('systemOverviewController', [
-    '$scope', '$window', 'APIUtils', 'dataService', '$q',
-    function($scope, $window, APIUtils, dataService, $q) {
-      $scope.dataService = dataService;
-      $scope.dropdown_selected = false;
-      $scope.tmz = 'EDT';
-      $scope.logs = [];
-      $scope.server_info = {};
-      $scope.bmc_firmware = '';
-      $scope.bmc_time = '';
-      $scope.server_firmware = '';
-      $scope.power_consumption = '';
-      $scope.power_cap = '';
-      $scope.bmc_ip_addresses = [];
-      $scope.loading = false;
-      $scope.edit_hostname = false;
+    angular
+        .module('app.overview')
+        .controller('systemOverviewController', [
+            '$rootScope',
+            '$scope',
+            '$window',
+            'APIUtils',
+            'dataService',
+            '$q',
+            function($rootScope, $scope, $window, APIUtils, dataService, $q){
+                $scope.dataService = dataService;
+                $scope.dropdown_selected = false;
+                $scope.tmz = 'EDT';
+                $scope.logs = [];
+                $scope.mac_address = "";
+                $scope.bmc_info = {};
+                $scope.bmc_firmware = "";
+                $scope.server_firmware = "";
+                $scope.power_consumption = "";
+                $scope.power_cap = "";
+                $scope.loading = false;
 
-      loadOverviewData();
+                loadOverviewData();
+                function loadOverviewData(){
+                    $scope.loading = true;
+                    var promises = {
+                      logs: {},//APIUtils.getLogs(),
+                      firmware: APIUtils.getFirmwares(),
+                      led: APIUtils.getLEDState(),
+                      ethernet: APIUtils.getBMCEthernetInfo(),
+                      bmc_info: APIUtils.getBMCInfo(),
+                      power_consumption: APIUtils.getPowerConsumption(),
+                      power_cap: APIUtils.getPowerCap(),
+                    };
+                    $q.all(promises)
+                      .then(function(data){
+                        $scope.displayLogs(data.logs.data);
+                        $scope.displayServerInfo(
+                            data.firmware.data,
+                            data.firmware.bmcActiveVersion,
+                            data.firmware.hostActiveVersion
+                        );
+                        $scope.displayLEDState(data.led);
+                        $scope.displayBMCEthernetInfo(data.ethernet);
+                        $scope.displayBMCInfo(data.bmc_info);
+                        $scope.displayPowerConsumption(data.power_consumption);
+                        $scope.displayPowerCap(data.power_cap);
+                      })
+                      .finally(function(){
+                        $scope.loading = false;
+                      });
+                }
+                $scope.displayBMCEthernetInfo = function(data){
+                    $scope.mac_address = data.MACAddress;
+                }
 
-      function loadOverviewData() {
-        $scope.loading = true;
+                $scope.displayBMCInfo = function(data){
+                    $scope.bmc_info = data;
+                }
 
-        var getLogsPromise = APIUtils.getLogs().then(
-            function(data) {
-              $scope.logs = data.data.filter(function(log) {
-                return log.severity_flags.high == true;
-              });
-            },
-            function(error) {
-              console.log(JSON.stringify(error));
-            });
+                $scope.displayLogs = function(data){
+                    $scope.logs = data.filter(function(log){
+                        return log.severity_flags.high == true;
+                    });
+                }
 
-        var getFirmwaresPromise = APIUtils.getFirmwares().then(
-            function(data) {
-              $scope.bmc_firmware = data.bmcActiveVersion;
-              $scope.server_firmware = data.hostActiveVersion;
-            },
-            function(error) {
-              console.log(JSON.stringify(error));
-            });
+                $scope.displayServerInfo = function(data, bmcActiveVersion, hostActiveVersion){
+                    $scope.bmc_firmware = bmcActiveVersion;
+                    $scope.server_firmware = hostActiveVersion;
+                }
 
-        var getLEDStatePromise = APIUtils.getLEDState().then(
-            function(data) {
-              if (data == APIUtils.LED_STATE.on) {
-                dataService.LED_state = APIUtils.LED_STATE_TEXT.on;
-              } else {
-                dataService.LED_state = APIUtils.LED_STATE_TEXT.off;
-              }
-            },
-            function(error) {
-              console.log(JSON.stringify(error));
-            });
+                $scope.displayLEDState = function(state){
+                    if(state == APIUtils.LED_STATE.on){
+                        dataService.LED_state = APIUtils.LED_STATE_TEXT.on;
+                    }else{
+                        dataService.LED_state = APIUtils.LED_STATE_TEXT.off;
+                    }
+                }
 
-        var getBMCTimePromise = APIUtils.getBMCTime().then(
-            function(data) {
-              $scope.bmc_time = data.data.Elapsed / 1000;
-            },
-            function(error) {
-              console.log(JSON.stringify(error));
-            });
+                $scope.toggleLED = function(){
+                    var toggleState = (dataService.LED_state == APIUtils.LED_STATE_TEXT.on) ?
+                        APIUtils.LED_STATE.off : APIUtils.LED_STATE.on;
+                        dataService.LED_state = (dataService.LED_state == APIUtils.LED_STATE_TEXT.on) ?
+                        APIUtils.LED_STATE_TEXT.off : APIUtils.LED_STATE_TEXT.on;
+                    APIUtils.setLEDState(toggleState, function(status){
+                    });
+                }
 
-        var getServerInfoPromise = APIUtils.getServerInfo().then(
-            function(data) {
-              $scope.server_info = data.data;
-            },
-            function(error) {
-              console.log(JSON.stringify(error));
-            });
+                $scope.displayPowerConsumption = function(data){
+                    $scope.power_consumption = data;
+                }
 
-        var getPowerConsumptionPromise = APIUtils.getPowerConsumption().then(
-            function(data) {
-              $scope.power_consumption = data;
-            },
-            function(error) {
-              console.log(JSON.stringify(error));
-            });
+                $scope.displayPowerCap = function(data){
+                    $scope.power_cap = data;
+                }
 
-        var getPowerCapPromise = APIUtils.getPowerCap().then(
-            function(data) {
-              $scope.power_cap = data;
-            },
-            function(error) {
-              console.log(JSON.stringify(error));
-            });
+                var refreshDataListener = $rootScope.$on('refresh-data', function(event, args) {
+                    loadOverviewData();
+                });
 
-        var getNetworkInfoPromise = APIUtils.getNetworkInfo().then(
-            function(data) {
-              // TODO: openbmc/openbmc#3150 Support IPV6 when
-              // officially supported by the backend
-              $scope.bmc_ip_addresses = data.formatted_data.ip_addresses.ipv4;
-            },
-            function(error) {
-              console.log(JSON.stringify(error));
-            });
-
-        var promises = [
-          getLogsPromise,
-          getFirmwaresPromise,
-          getLEDStatePromise,
-          getBMCTimePromise,
-          getServerInfoPromise,
-          getPowerConsumptionPromise,
-          getPowerCapPromise,
-          getNetworkInfoPromise,
-        ];
-
-        $q.all(promises).finally(function() {
-          $scope.loading = false;
-        });
-      }
-
-      $scope.toggleLED = function() {
-        var toggleState =
-            (dataService.LED_state == APIUtils.LED_STATE_TEXT.on) ?
-            APIUtils.LED_STATE.off :
-            APIUtils.LED_STATE.on;
-        dataService.LED_state =
-            (dataService.LED_state == APIUtils.LED_STATE_TEXT.on) ?
-            APIUtils.LED_STATE_TEXT.off :
-            APIUtils.LED_STATE_TEXT.on;
-        APIUtils.setLEDState(toggleState, function(status) {});
-      };
-
-      $scope.saveHostname = function(hostname) {
-        $scope.edit_hostname = false;
-        $scope.loading = true;
-        APIUtils.setHostname(hostname).then(
-            function(data) {
-              APIUtils.getNetworkInfo().then(function(data) {
-                dataService.setNetworkInfo(data);
-              });
-            },
-            function(error) {
-              console.log(error);
-            });
-        $scope.loading = false;
-      };
-
-      $scope.getEventLogTitle = function(event) {
-        var title = event.type;
-        if ((event.eventID != 'None') && (event.description != 'None')) {
-          title = event.eventID + ': ' + event.description;
-        }
-        return title;
-      };
-    }
-  ]);
+                $scope.$on('$destroy', function() {
+                    refreshDataListener();
+                });
+            }
+        ]
+    );
 
 })(angular);

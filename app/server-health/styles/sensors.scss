@@ -46,7 +46,7 @@ $title-minWidth: 210px;
   @include mediaQuery(medium) {
     display: inline-block;
     width: auto;
-    min-width: calc(70% * (1 / 5) - 18px);
+    min-width: calc(70% * (1 / 6) - 18px);
   }
 }
 
@@ -56,7 +56,7 @@ $title-minWidth: 210px;
   margin: 0;
   background: $white;
   text-decoration: none;
-  border: 1px solid $medgrey;
+  border: 3px solid $medgrey;
   background: lighten($lightgrey,1%);
   margin-top: 1em;
   @include mediaQuery(medium) {
@@ -100,14 +100,14 @@ $title-minWidth: 210px;
       background: $thresh-normal;
       padding: .7em .3em;
       margin-left: 10px;
-      min-width: 109px;
+      min-width: 100px;
     }
     @include mediaQuery(large) {
       background: $thresh-normal;
       padding: .7em;
       margin-left: .3em;
       margin-right: .3em;
-      min-width: 150px;
+      min-width: 100px;
     }
     .sensor__label {
       font-weight: 700;
@@ -130,7 +130,94 @@ $title-minWidth: 210px;
       color: $black;
     }
   }
-
+  .sensor__metadata-row {
+    max-height: 0;
+    overflow: hidden;
+    -webkit-transition: 0.5s linear max-height;
+    transition: 0.3s linear max-height;
+    &.active {
+      max-height: 1000px;
+      @include mediaQuery(small) {
+        max-height: 1000px;
+      }
+      @include mediaQuery(medium) {
+        max-height: 1000px;
+      }
+    }
+  }
+  .sensor__data-box {
+	margin-left: .4em;
+	margin-right: .4em;
+	background: $sensor-detail-box;
+    &.active {
+      max-height: 1000px;
+      @include mediaQuery(small) {
+        max-height: 1000px;
+      }
+      @include mediaQuery(medium) {
+        max-height: 1000px;
+      }
+    }
+  }
+  .sensor__data-bar {
+	margin-left: .0em;
+	margin-right: .0em;
+	background: $sensor-data-bar;
+	max-width: 100%;
+  }
+  .update_inline__confirm {
+    max-height: 0;
+    overflow: hidden;
+	background: $darkbg__primary;
+	color: $white;
+    -webkit-transition: 0.5s linear max-height;
+    transition: 0.1s linear max-height;
+	margin-left: 0;
+	left : 0;
+	//padding-bottom: 1em;
+    &.active {
+      max-height: 1000px;
+      @include mediaQuery(small) {
+        max-height: 1000px;
+      }
+      @include mediaQuery(medium) {
+        max-height: 1000px;
+      }
+    }
+  }
+  .inline__confirm {
+    height: auto;
+    margin-left: 0;
+    left: 0;
+    padding: 1em 2em 1em 2em;
+	&:active {
+		transform: translateY(0);
+		@include fastTransition-all;
+	  }
+  }
+  .inline__confirm-message {
+    margin-top: 5px;
+    margin-bottom: -10px;
+  }
+  .inline__confirm-buttons .btn-primary {
+    padding: .5em 2em;
+    min-height: 25px;
+    margin-top: .5em;
+    @include mediaQuery(medium) {
+      margin-top: 0;
+    }
+  }
+  .btn-resolve {
+    color: black;
+    font-size: .9em;
+    font-weight: 700;
+    position: relative;
+    padding: 0 0 1em 2em;
+    &:hover {
+		animation: bounce 1s;
+		text-decoration: underline;
+    }
+  }
 }
 
 // Sensors
@@ -140,7 +227,7 @@ $title-minWidth: 210px;
   .content__search {
     max-width: 100%;
     @media(min-width: 1300px) {
-      max-width: 59%;
+      max-width: 70%;
     }
   }
   .toggle-filter {

@@ -1,4 +1,4 @@
-<loader loading="loading"></loader>
+<!--<loader loading="loading"></loader>-->
 <div id="event-log">
     <div class="row column">
         <h1>Event log</h1>
@@ -64,7 +64,7 @@
             </div>
         </div>
         <log-event
-        dir-paginate="event in (filteredLogs = (logs|filter:filterBySeverity|filter:filterByStatus|filter:filterByDate|filter:filterBySearchTerms | orderBy:'-Id'))| itemsPerPage: itemsPerPage"
+        dir-paginate="event in (filteredLogs = (logs|filter:filterBySeverity|filter:filterByStatus|filter:filterByDate|filter:filterBySearchTerms | orderBy:'+Id'))| itemsPerPage: itemsPerPage"
         event="event"
         tmz="tmz"
         multi-selected="selectedEvents.length > 1"
