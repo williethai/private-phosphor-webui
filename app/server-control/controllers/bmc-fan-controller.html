@@ -1,0 +1,36 @@
+<section id="bmc-fan-control">
+	<div class="row column">
+		<h1>PSU Fan Control</h1>
+	</div>
+
+	<div class="row column">
+		<div class="bmc-reboot-option" ng-class="{disabled: dataService.server_unreachable || dataService.loading, transitionAll: confirm}">
+			<p>Controlling Fan Speed With Pwm.</p>
+		</div>
+	</div>
+	<section class="row column">
+		<div class="row small-12 large-3">
+			<label for="psu0_fan_pwm">PSU0 Fan (pwm%)</label>
+			<input id="psu0_fan" name="psu0_fan_pwm" type="text" ng-model="psu0_fan_pwm"/>
+			<button id="bmc__reboot" class="btn-secondary float-left" ng-class="{disabled: confirm}" ng-click="controlFan(0, psu0_fan_pwm)" ng-disabled="dataService.server_unreachable">
+				<i>&#x21BB</i> Update Fan Speed
+			</button>
+			</div>
+		<div class="column">
+			
+		</div>
+		<div class="row small-12 large-3">
+			<label for="psu1_fan_pwm">PSU1 Fan (pwm%)</label>
+			<input id="psu1_fan" name="psu1_fan_pwm" type="text" ng-model="psu1_fan_pwm"/>
+			<button id="bmc__reboot" class="btn-secondary float-left" ng-class="{disabled: confirm}" ng-click="controlFan(1, psu1_fan_pwm)" ng-disabled="dataService.server_unreachable">
+				<i>&#x21BB</i> Update Fan Speed
+			</button>
+			</div>
+		<div class="column">
+			
+		</div>
+	</section>
+	<section class="row column">
+		
+	</section>
+</section>

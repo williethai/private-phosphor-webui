@@ -2,11 +2,12 @@
 	<div class="row column">
 		<h1>Reboot BMC</h1>
 	</div>
+
 	<div class="row column">
 		<div class="page-header">
 			<p class="inline h4">Current BMC boot status</p>
 			<div class="float-right bmc-reboot__status-log inline">BMC last reboot at
-				<span class="courier-bold">{{reboot_time | date:'medium'}}</span></div>
+				<span class="courier-bold">{{dataService.last_updated |date:'h:mm:ss on MMM dd yyyy'}}</span></div>
 		</div>
 	</div>
 	<div class="row column">

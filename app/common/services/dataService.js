@@ -5,151 +5,122 @@
  * @exports dataService
  * @name dataService
 
+ * @version 0.0.1
  */
 
-window.angular && (function(angular) {
-  'use strict';
+window.angular && (function (angular) {
+    'use strict';
 
-  angular.module('app.common.services').service('dataService', [
-    'Constants',
-    function(Constants) {
-      this.server_health = Constants.SERVER_HEALTH.unknown;
-      this.server_state = 'Unreachable';
-      this.server_status = -2;
-      this.chassis_state = 'On';
-      this.LED_state = Constants.LED_STATE_TEXT.off;
-      this.last_updated = new Date();
+    angular
+        .module('app.common.services')
+        .service('dataService', ['Constants', function (Constants) {
+            this.app_version = "V.0.0.1";
+            this.server_health = Constants.SERVER_HEALTH.unknown;
+            this.server_state = 'Unreachable';
+            this.server_status = -2;
+            this.chassis_state = 'On';
+            this.LED_state = Constants.LED_STATE_TEXT.off;
+            this.last_updated = new Date();
 
-      this.loading = false;
-      this.server_unreachable = false;
-      this.loading_message = '';
-      this.showNavigation = false;
-      this.bodyStyle = {};
-      this.path = '';
-      this.sensorData = [];
+            this.loading = false;
+            this.server_unreachable = false;
+            this.loading_message = "";
+            this.showNavigation = false;
+            this.bodyStyle = {};
+            this.path = '';
+            this.sensorData = [];
 
-      this.hostname = '';
-      this.mac_address = '';
-      this.defaultgateway = '';
-      this.remote_window_active = false;
+            this.hostname = "";
+            this.mac_address = "";
+            this.remote_window_active = false;
+            this.ignoreHttpError = false;
+            this.getServerId = function(){
+                 return this.host.replace(/^https?\:\/\//ig,"");
+            }
 
-      this.displayErrorModal = false;
-      this.errorModalDetails = {};
+            this.reloadServerId = function(){
+                this.server_id = this.getServerId();
+            }
 
-      this.ignoreHttpError = false;
-      this.getServerId = function() {
-        return this.host.replace(/^https?\:\/\//ig, '');
-      };
+            this.getHost = function(){
+                if(sessionStorage.getItem(Constants.API_CREDENTIALS.host_storage_key) !== null){
+                    return sessionStorage.getItem(Constants.API_CREDENTIALS.host_storage_key);
+                }else{
+                    return Constants.API_CREDENTIALS.default_protocol + "://" +
+                           window.location.hostname +
+                           (window.location.port ? ":" + window.location.port : "");
+                }
+            }
 
-      this.reloadServerId = function() {
-        this.server_id = this.getServerId();
-      };
+            this.setHost = function(hostWithPort){
+                hostWithPort = hostWithPort.replace(/^https?\:\/\//ig, '');
+                var hostURL = Constants.API_CREDENTIALS.default_protocol + "://" + hostWithPort;
+                sessionStorage.setItem(Constants.API_CREDENTIALS.host_storage_key, hostURL);
+                this.host = hostURL;
+                this.reloadServerId();
+            }
 
-      this.getHost = function() {
-        if (sessionStorage.getItem(
-                Constants.API_CREDENTIALS.host_storage_key) !== null) {
-          return sessionStorage.getItem(
-              Constants.API_CREDENTIALS.host_storage_key);
-        } else {
-          return Constants.API_CREDENTIALS.default_protocol + '://' +
-              window.location.hostname +
-              (window.location.port ? ':' + window.location.port : '');
-        }
-      };
+            this.getUser = function(){
+                return sessionStorage.getItem('LOGIN_ID');
+            }
 
-      this.setHost = function(hostWithPort) {
-        hostWithPort = hostWithPort.replace(/^https?\:\/\//ig, '');
-        var hostURL =
-            Constants.API_CREDENTIALS.default_protocol + '://' + hostWithPort;
-        sessionStorage.setItem(
-            Constants.API_CREDENTIALS.host_storage_key, hostURL);
-        this.host = hostURL;
-        this.reloadServerId();
-      };
+            this.host = this.getHost();
+            this.server_id = this.getServerId();
 
-      this.getUser = function() {
-        return sessionStorage.getItem('LOGIN_ID');
-      };
+            this.setNetworkInfo = function(data){
+                this.hostname = data.hostname;
+                this.mac_address = data.mac_address;
+            }
 
-      this.host = this.getHost();
-      this.server_id = this.getServerId();
+            this.setPowerOnState = function(){
+                this.server_state = Constants.HOST_STATE_TEXT.on;
+                this.server_status = Constants.HOST_STATE.on;
+            }
 
-      this.setNetworkInfo = function(data) {
-        this.hostname = data.hostname;
-        this.defaultgateway = data.defaultgateway;
-        this.mac_address = data.mac_address;
-      };
+            this.setPowerOffState = function(){
+                this.server_state = Constants.HOST_STATE_TEXT.off;
+                this.server_status = Constants.HOST_STATE.off;
+            }
 
-      this.setPowerOnState = function() {
-        this.server_state = Constants.HOST_STATE_TEXT.on;
-        this.server_status = Constants.HOST_STATE.on;
-      };
+            this.setBootingState = function(){
+                this.server_state = Constants.HOST_STATE_TEXT.booting;
+                this.server_status = Constants.HOST_STATE.booting;
+            }
 
-      this.setPowerOffState = function() {
-        this.server_state = Constants.HOST_STATE_TEXT.off;
-        this.server_status = Constants.HOST_STATE.off;
-      };
+            this.setUnreachableState = function(){
+                this.server_state = Constants.HOST_STATE_TEXT.unreachable;
+                this.server_status = Constants.HOST_STATE.unreachable;
+            }
 
-      this.setErrorState = function() {
-        this.server_state = Constants.HOST_STATE_TEXT.error;
-        this.server_status = Constants.HOST_STATE.error;
-      };
+            this.setRemoteWindowActive = function(){
+                this.remote_window_active = true;
+            }
 
-      this.setUnreachableState = function() {
-        this.server_state = Constants.HOST_STATE_TEXT.unreachable;
-        this.server_status = Constants.HOST_STATE.unreachable;
-      };
+            this.setRemoteWindowInactive = function(){
+                this.remote_window_active = false;
+            }
 
-      this.setRemoteWindowActive = function() {
-        this.remote_window_active = true;
-      };
+            this.updateServerHealth = function(logs){
+                var criticals = logs.filter(function(item){
+                    return item.health_flags.critical == true;
+                });
 
-      this.setRemoteWindowInactive = function() {
-        this.remote_window_active = false;
-      };
+                if(criticals.length){
+                    this.server_health = Constants.SERVER_HEALTH.critical;
+                    return;
+                }
 
-      this.updateServerHealth = function(logs) {
-        var criticals = logs.filter(function(item) {
-          return item.health_flags.critical == true;
-        });
+                var warnings = logs.filter(function(item){
+                    return item.health_flags.warning == true;
+                });
 
-        if (criticals.length) {
-          this.server_health = Constants.SERVER_HEALTH.critical;
-          return;
-        }
+                if(warnings.length){
+                    this.server_health = Constants.SERVER_HEALTH.warning;
+                    return;
+                }
 
-        var warnings = logs.filter(function(item) {
-          return item.health_flags.warning == true;
-        });
-
-        if (warnings.length) {
-          this.server_health = Constants.SERVER_HEALTH.warning;
-          return;
-        }
-
-        this.server_health = Constants.SERVER_HEALTH.good;
-      };
-
-      this.activateErrorModal = function(data) {
-        if (data && data.hasOwnProperty('title')) {
-          this.errorModalDetails.title = data.title;
-        } else {
-          this.errorModalDetails.title = Constants.MESSAGES.ERROR_MODAL.TITLE;
-        }
-
-        if (data && data.hasOwnProperty('description')) {
-          this.errorModalDetails.description = data.description;
-        } else {
-          this.errorModalDetails.description =
-              Constants.MESSAGES.ERROR_MODAL.DESCRIPTION;
-        }
-        this.displayErrorModal = true;
-      };
-
-      this.deactivateErrorModal = function() {
-        this.displayErrorModal = false;
-      };
-    }
-  ]);
+                this.server_health = Constants.SERVER_HEALTH.good;
+            }
+        }]);
 
 })(window.angular);

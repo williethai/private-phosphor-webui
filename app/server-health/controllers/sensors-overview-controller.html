@@ -1,5 +1,5 @@
 <loader loading="loading"></loader>
-<div id="sensors-overview">
+<div id="sensors-overview" class="large-10">
 	<div class="row column">
 		<h1>Sensors</h1>
 	</div>
@@ -32,9 +32,6 @@
 			<button class="inline" ng-click="toggleSeverity('warning')"
 					ng-class="selectedSeverity.warning ? 'btn-primary' : 'btn-secondary'">Warning
 			</button>
-			<button class="inline" ng-click="toggleSeverity('normal')"
-					ng-class="selectedSeverity.normal ? 'btn-primary' : 'btn-secondary'">Normal
-			</button>
 		</div>
 
 	</section> <!-- end search -->
@@ -44,7 +41,6 @@
 		<span ng-if="selectedSeverity.all">{{messages.NO_SENSOR_DATA}}</span>
 		<span ng-if="selectedSeverity.critical">{{messages.CRITICAL_NO_SENSOR_DATA}}</span>
 		<span ng-if="selectedSeverity.warning">{{messages.WARNING_NO_SENSOR_DATA}}</span>
-		<span ng-if="selectedSeverity.normal">{{messages.NORMAL_NO_SENSOR_DATA}}</span>
 		<!-- end message -->
 	</section>
 
@@ -57,16 +53,190 @@
 				<p class="inline sensor__reading sensor__heading-current">Current</p>
 				<p class="inline sensor__reading">High warning</p>
 				<p class="inline sensor__reading">High critical</p>
+				<p class="inline sensor__reading">Detail</p>
 			</div>
 		</div>
 		<!-- sensor -->
 		<div class="sensor__readings-row" ng-repeat="sensor in data|filter:filterBySeverity|filter:filterBySearchTerms|orderBy:'+custom_order' as filteredSensorData">
-			<p class="inline sensor__title"><span class="icon" ng-class="{'icon__critical': sensor.status == 'critical', 'icon__warning': sensor.status == 'warning', 'icon__normal': sensor.status == 'normal'}" aria-label="sensor.status" ></span>{{sensor.title}}</p>
-			<p class="inline sensor__reading"><span class="sensor__label">Low critical</span>{{sensor.CriticalLow}}<span class="content-label">{{sensor.unit}}<span ng-if="sensor.unit == 'C'">&deg;</span></p>
-			<p class="inline sensor__reading"><span class="sensor__label">Low warning</span>{{sensor.WarningLow}}<span class="content-label">{{sensor.unit}}<span ng-if="sensor.unit == 'C'">&deg;</span></p>
-			<p class="inline sensor__reading sensor__current" ng-class="{'sensor__critical': sensor.status == 'critical', 'sensor__warn': sensor.status == 'warning', 'sensor__normal': sensor.status == 'normal'}"><span class="sensor__label">Current</span>{{sensor.Value}}<span class="content-label">{{sensor.unit}}<span ng-if="sensor.unit == 'C'">&deg;</span></span></p>
-			<p class="inline sensor__reading"><span class="sensor__label">High warning</span>{{sensor.WarningHigh}}<span class="content-label">{{sensor.unit}}<span ng-if="sensor.unit == 'C'">&deg;</span></p>
-			<p class="inline sensor__reading"><span class="sensor__label">High critical</span>{{sensor.CriticalHigh}}<span class="content-label">{{sensor.unit}}<span ng-if="sensor.unit == 'C'">&deg;</span></p>
+			<div class="row">
+				<div class="update_inline__confirm" ng-class="{active: sensor.confirm}">
+					<div class="row">
+						<div class="col-md-1"></div>
+						<div class="inline__confirm-message">                 
+							<p class="h3"><i></i>Are you sure you want to <strong class="ng-binding">update</strong>?</p>
+						</div>
+					</div>
+					<div class="row">
+							<div class="col-md-6"></div>
+							<button class="col-md-2 btn-primary" ng-click="update(sensor); sensor.confirm=false;">Yes</button>
+							<div class="col-md-1"></div>
+							<button class="col-md-2 btn-primary" ng-click="sensor.confirm=false;">No</button>
+							<div class="col-md-1"></div>			
+					</div>
+					<div class="row"><br></div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="update_inline__confirm" ng-class="{active: sensor.dis_fail}">
+					<div class="row">
+						<div class="col-md-1"></div>
+						<div class="inline__confirm-message">                 
+							<p class="h3"><i></i>Fail to update !!!</p>
+							<p class="h4">{{sensor.fail_attr}}</p>
+						</div>
+					</div>
+					<div class="row">
+							<div class="col-md-6"></div>
+							<button class="col-md-2 btn-primary" ng-click="update(sensor); sensor.confirm=false;">Again</button>
+							<div class="col-md-1"></div>
+							<button class="col-md-2 btn-primary" ng-click="sensor.dis_fail=false;">Quit</button>
+							<div class="col-md-1"></div>			
+					</div>
+					<div class="row"><br></div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="update_inline__confirm" ng-class="{active: sensor.fetch_fail}">
+					<div class="row">
+						<div class="col-md-1"></div>
+						<div class="inline__confirm-message">                 
+							<p class="h3"><i></i>Fail to fetch ESM <strong class="ng-binding">{{sensor.title}}</strong>!!!</p>
+							<p class="h4">{{sensor.fail_attr}}</p>
+						</div>
+					</div>
+					<div class="row">
+							<div class="col-md-6"></div>
+							<button class="col-md-2 btn-primary" ng-click="fetch(); sensor.confirm=false; sensor.fetch_fail=false;">Again</button>
+							<div class="col-md-1"></div>
+							<button class="col-md-2 btn-primary" ng-click="sensor.fetch_fail=false;">Quit</button>
+							<div class="col-md-1"></div>			
+					</div>
+					<div class="row"><br></div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="update_inline__confirm" ng-class="{active: sensor.dis_succ}">
+					<div class="row">
+						<div class="col-md-1"></div>
+						<div class="inline__confirm-message">                 
+							<p class="h3"><i></i>Updated successfully, do you want to fetch new ESM for <strong class="ng-binding">{{sensor.title}}</strong>?</p>
+						</div>
+					</div>
+					<div class="row">
+							<div class="col-md-6"></div>
+							<button class="col-md-2 btn-primary" ng-click="fetch(sensor); sensor.confirm=false; sensor.dis_succ=false;">Yes</button>
+							<div class="col-md-1"></div>
+							<button class="col-md-2 btn-primary" ng-click="sensor.dis_succ=false;">No</button>
+							<div class="col-md-1"></div>			
+					</div>
+					<div class="row"><br></div>
+				</div>
+			</div>
+			<div class="row">
+				<div>
+					<p class="inline sensor__title"><span class="icon" ng-class="{'icon__critical': sensor.status == 'critical', 'icon__warning': sensor.status == 'warning', 'icon__normal': sensor.status == 'normal'}" aria-label="sensor.status" ></span>{{sensor.title}}</p>
+					<p class="inline sensor__reading"><span class="sensor__label">Low critical</span>{{sensor.CriticalLow}}<span class="content-label">{{sensor.unit}}<span ng-if="sensor.unit == 'C'">&deg;</span></p>
+					<p class="inline sensor__reading"><span class="sensor__label">Low warning</span>{{sensor.WarningLow}}<span class="content-label">{{sensor.unit}}<span ng-if="sensor.unit == 'C'">&deg;</span></p>
+					<p class="inline sensor__reading sensor__current" ng-class="{'sensor__critical': sensor.status == 'critical', 'sensor__warn': sensor.status == 'warning', 'sensor__normal': sensor.status == 'normal'}"><span class="sensor__label">Current</span>{{sensor.Value}}<span class="content-label">{{sensor.unit}}<span ng-if="sensor.unit == 'C'">&deg;</span></span></p>
+					<p class="inline sensor__reading"><span class="sensor__label">High warning</span>{{sensor.WarningHigh}}<span class="content-label">{{sensor.unit}}<span ng-if="sensor.unit == 'C'">&deg;</span></p>
+					<p class="inline sensor__reading"><span class="sensor__label">High critical</span>{{sensor.CriticalHigh}}<span class="content-label">{{sensor.unit}}<span ng-if="sensor.unit == 'C'">&deg;</span></p>
+				</div>
+				<div class="column small-1 large-1">
+					<button class="accord-trigger" ng-class="{'active': sensor.meta}" ng-click="sensor.meta = ! sensor.meta; sensor.confirm = false;"></button>
+				</div>
+			</div>
+			<div class="row sensor__metadata-row" ng-class="{'active': sensor.meta}">
+				<div>
+					<hr style="height:1px;border-top:3px solid #d7dbe0" />
+					<script>
+						if(sensor.sensor_type == "temperature"){sensor.display_detail = true}
+						else sensor.display_detail = false
+					</script>
+					<div class="row">
+						<div class="container-fluid">
+							<div class="row"><br></div>
+							<div class="row">
+								<div class="col-md-3"><p>EsmDisabled:</p>
+								</div>
+								<div class="col-md-3"><input type="text" ng-model="sensor.EsmDisabled">
+								</div>
+								<div class="col-md-3"><p>EsmFail:</p>
+								</div>
+								<div class="col-md-3"><input type="text" ng-model="sensor.EsmFail">
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-3"><p>EsmName:</p>
+								</div>
+								<div class="col-md-3"><input type="text" ng-model="sensor.EsmName" readonly>
+								</div>
+								<div class="col-md-3"><p>EsmOtFailure:</p>
+								</div>
+								<div class="col-md-3"><input type="text" ng-model="sensor.EsmOtFailure">
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-3"><p>EsmOtWarning:</p>
+								</div>
+								<div class="col-md-3"><input type="text" ng-model="sensor.EsmOtWarning">
+								</div>
+								<div class="col-md-3"><p>EsmPrdFail:</p>
+								</div>
+								<div class="col-md-3"><input type="text" ng-model="sensor.EsmPrdFail">
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-3"><p>EsmRqstOverride:</p>
+								</div>
+								<div class="col-md-3"><input type="text" ng-model="sensor.EsmRqstOverride">
+								</div>
+								<div class="col-md-3"><p>EsmStatusCode:</p>
+								</div>
+								<div class="col-md-3"><input type="text" ng-model="sensor.EsmStatusCode">
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-3"><p>EsmUtFailure:</p>
+								</div>
+								<div class="col-md-3"><input type="text" ng-model="sensor.EsmUtFailure">
+								</div>
+								<div class="col-md-3"><p>EsmUtWarning:</p>
+								</div>
+								<div class="col-md-3"><input type="text" ng-model="sensor.EsmUtWarning">
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-3"><p>Value:</p>
+								</div>
+								<div class="col-md-3"><input type="text" ng-model="sensor.Value">
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-10"></div>
+							<div class="col-md-1 event__actions">
+								<button class="btn-resolve" ng-class="{'disabled': multiSelected}" ng-click="sensor.confirm= ! sensor.confirm; sensor.dis_succ = false; sensor.dis_fail = false;" ng-disabled="multiSelected"><img class="event__icon" src="../../assets/images/icon-check.svg" alt=""/>Update</button>
+							</div>
+						</div>
+						<!--
+						<div class="column small-1 large-5">
+							<div class="row"\>EsmDisabled:
+							<div class="row"\>EsmDisabled: 
+							<div class="row"\>EsmDisabled: 
+							<div class="row"\>EsmDisabled: 
+							<div class="row"\>EsmDisabled: 
+						</div>
+						<div class="column small-1 large-5">
+							<input type="text" name="fname" value={{sensor.EsmDisabled}}>
+							<input type="text" name="fname" value={{sensor.EsmDisabled}}>
+							<input type="text" name="fname" value={{sensor.EsmDisabled}}>
+							<input type="text" name="fname" value={{sensor.EsmDisabled}}>
+							<input type="text" name="fname" value={{sensor.EsmDisabled}}>
+						</div>
+						-->
+					</div>
+				</div>
+			</div>
 		</div>
 	</section>
 </div>

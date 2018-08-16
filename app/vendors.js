@@ -3,10 +3,12 @@
  *
  * @module app/vendors
  * @exports app/vendors
+ * @version 0.0.1
  */
 
-window.angular && (function(angular) {
-  'use strict';
+window.angular && (function (angular) {
+    'use strict';
 
-  angular.module('app.vendors', []);
+    angular
+        .module('app.vendors', [])
 })(window.angular);

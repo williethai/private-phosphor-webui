@@ -2,7 +2,8 @@
     <div class="row">
         <div class="columns large-6">
             <img src="../../assets/images/logo.svg" class="login__logo" alt="OpenBMC logo" role="img"/>
-    </div>
+			<h1>OpenBMC</h1>
+		</div>
         <div class="columns large-6">
         </div>
     </div>
@@ -12,7 +13,7 @@
         </div>
         <div class="columns large-6 disabled">
             <form id="login__form" action="">
-                <label >BMC Host or BMC IP Address</label>
+                <label >Host</label>
                 <input type="text" ng-model="host" required  ng-class="{error: error}" autofocus ng-keydown="tryLogin(host, username, password, $event)" ng-disabled="dataService.loading">
 
                 <label for="username">Username</label>
